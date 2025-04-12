@@ -3,7 +3,7 @@ import JobList from "../components/JobList";
 import AddJobForm from "../components/AddJobForm";
 import API from "../services/Api";
 import { PlusCircle } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import { showToast, showToastPromise } from "../utils/toast";
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -18,7 +18,7 @@ const Jobs = () => {
       setJobs(res.data);
     } catch (err) {
       console.error("Failed to fetch jobs:", err);
-      toast.error("Failed to load jobs");
+      showToast("error", "Failed to load jobs");
     } finally {
       setLoading(false);
     }
@@ -29,35 +29,55 @@ const Jobs = () => {
   }, []);
 
   const handleSubmitJob = async (jobData, isEditing) => {
-    if (isEditing) {
-      setJobs((prev) =>
-        prev.map((j) => (j._id === jobData._id ? jobData : j))
-      );
-      toast.success("Job updated successfully");
-    } else {
-      setJobs((prev) => [...prev, jobData]);
-      toast.success("Job added successfully");
-    }
+    const promise = new Promise((resolve, reject) => {
+      try {
+        if (isEditing) {
+          setJobs((prev) =>
+            prev.map((j) => (j._id === jobData._id ? jobData : j))
+          );
+        } else {
+          setJobs((prev) => [...prev, jobData]);
+        }
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
 
-    setJobToEdit(null);
-    setShowModal(false);
+    showToastPromise(promise, {
+      loading: isEditing ? "Updating job..." : "Adding job...",
+      success: isEditing ? "Job updated successfully!" : "Job added successfully!",
+      error: isEditing ? "Failed to update job" : "Failed to add job",
+    });
+
+    try {
+      await promise;
+      setJobToEdit(null);
+      setShowModal(false);
+    } catch (err) {
+      console.error("Job submit error:", err);
+    }
   };
 
   const handleDeleteJob = async (id) => {
+    const promise = API.delete(`/jobs/${id}`);
+
+    showToastPromise(promise, {
+      loading: "Deleting job...",
+      success: "Job deleted successfully!",
+      error: "Failed to delete job",
+    });
+
     try {
-      await API.delete(`/jobs/${id}`);
+      await promise;
       setJobs((prev) => prev.filter((j) => j._id !== id));
-      toast.success("Job deleted successfully");
     } catch (err) {
-      console.error("Failed to delete job:", err);
-      toast.error("Failed to delete job");
+      console.error("Delete Job Error:", err);
     }
   };
 
   return (
     <div className="p-6">
-      <Toaster position="top-right" />
-
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">🧾 Job Applications</h1>
         <button
