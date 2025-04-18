@@ -1,0 +1,3 @@
+Github : https://github.com/magnuslopes23/JobApplicationTracker
+Website : http://44.195.62.53:3000/
+Video: https://drive.google.com/file/d/1J_0QcEHhz8lpbh7b2RVfR1o7QypAaGaQ/view?usp=sharing

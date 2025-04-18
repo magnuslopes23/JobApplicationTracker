@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - '5000:5000'
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       MONGO_URI_PROD: ${MONGO_URI_PROD}
